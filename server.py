@@ -270,6 +270,85 @@ def garmin_callback():
     return jsonify({"ok": True})
 
 
+# ── Disconnect ───────────────────────────────────────────────
+
+@app.route("/api/strava/disconnect", methods=["POST"])
+def strava_disconnect():
+    data  = request.get_json(force=True)
+    token = data.get("token")
+    user  = _get_supabase_user(token)
+    if not user:
+        return jsonify({"error": "Non authentifié"}), 401
+
+    # Récupère le token Strava en base pour révoquer côté Strava
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/integrations",
+        headers={**_supabase_admin_headers(), "Accept": "application/json"},
+        params={"user_id": f"eq.{user['id']}", "provider": "eq.strava",
+                "select": "access_token"},
+        timeout=5
+    )
+    if r.status_code == 200 and r.json():
+        access_token = r.json()[0].get("access_token")
+        if access_token:
+            try:
+                requests.post(
+                    "https://www.strava.com/oauth/deauthorize",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                    timeout=5
+                )
+            except Exception:
+                pass
+
+    # Supprime en base
+    requests.delete(
+        f"{SUPABASE_URL}/rest/v1/integrations",
+        headers=_supabase_admin_headers(),
+        params={"user_id": f"eq.{user['id']}", "provider": "eq.strava"},
+        timeout=5
+    )
+    return jsonify({"ok": True})
+
+
+@app.route("/api/garmin/disconnect", methods=["POST"])
+def garmin_disconnect():
+    data  = request.get_json(force=True)
+    token = data.get("token")
+    user  = _get_supabase_user(token)
+    if not user:
+        return jsonify({"error": "Non authentifié"}), 401
+
+    # Récupère le token Garmin pour révoquer côté Garmin
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/integrations",
+        headers={**_supabase_admin_headers(), "Accept": "application/json"},
+        params={"user_id": f"eq.{user['id']}", "provider": "eq.garmin",
+                "select": "access_token,external_user_id"},
+        timeout=5
+    )
+    if r.status_code == 200 and r.json():
+        row = r.json()[0]
+        access_token = row.get("access_token")
+        if access_token:
+            try:
+                requests.delete(
+                    "https://apis.garmin.com/wellness-api/rest/user/registration",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                    timeout=5
+                )
+            except Exception:
+                pass
+
+    # Supprime en base
+    requests.delete(
+        f"{SUPABASE_URL}/rest/v1/integrations",
+        headers=_supabase_admin_headers(),
+        params={"user_id": f"eq.{user['id']}", "provider": "eq.garmin"},
+        timeout=5
+    )
+    return jsonify({"ok": True})
+
+
 # ── Integrations status ───────────────────────────────────────
 
 @app.route("/api/integrations")

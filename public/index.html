@@ -171,6 +171,37 @@
     }
     .btn-garmin:hover { background: #0088d1; }
 
+    .device-slot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-connected {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .badge-connected.strava { background: #3a1500; border: 1px solid var(--strava); color: #ff8c5a; }
+    .badge-connected.garmin { background: #001d38; border: 1px solid var(--garmin); color: #5ab4f7; }
+
+    .btn-unlink {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 11px;
+      padding: 4px 9px;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-unlink:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
     .btn-account {
       background: transparent;
       border-color: var(--border2);
@@ -511,22 +542,14 @@
     </div>
   </div>
 
-  <!-- Étape 2 : connecté → appareillez vos données -->
+  <!-- Étape 2 : connecté → appareillez vos données (rendu dynamique) -->
   <div id="banner-step2" style="display:none;align-items:center;gap:16px;flex:1;flex-wrap:wrap;">
     <div class="banner-text">
       <strong>Appariez vos données.</strong>
       Connectez Strava ou Garmin pour synchroniser votre historique et affiner vos prédictions.
     </div>
-    <div class="banner-actions">
-      <button class="btn-connect btn-strava" onclick="connectStrava()" title="Connecter Strava">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-        Connecter Strava
-      </button>
-      <button class="btn-connect btn-garmin" onclick="connectGarmin()" title="Connecter Garmin">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>
-        Connecter Garmin
-      </button>
-      <button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>
+    <div class="banner-actions" id="device-actions">
+      <!-- rempli par renderDeviceActions() -->
     </div>
   </div>
 
@@ -690,24 +713,68 @@ async function handleOAuthCallback() {
   }
 }
 
-// ── Integration status → hide connected buttons ───────────────
+// ── Integration status + device actions rendering ────────────
+const STRAVA_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>`;
+const GARMIN_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>`;
+
+let _currentSession = null;
+
+function renderDeviceActions(integrations) {
+  const container = document.getElementById('device-actions');
+  if (!container) return;
+
+  const stravaSlot = integrations.strava
+    ? `<div class="device-slot">
+         <div class="badge-connected strava">${STRAVA_SVG} Strava connecté</div>
+         <button class="btn-unlink" onclick="disconnectProvider('strava')">Déconnecter</button>
+       </div>`
+    : `<button class="btn-connect btn-strava" onclick="connectStrava()">
+         ${STRAVA_SVG} Connecter Strava
+       </button>`;
+
+  const garminSlot = integrations.garmin
+    ? `<div class="device-slot">
+         <div class="badge-connected garmin">${GARMIN_SVG} Garmin connecté</div>
+         <button class="btn-unlink" onclick="disconnectProvider('garmin')">Déconnecter</button>
+       </div>`
+    : `<button class="btn-connect btn-garmin" onclick="connectGarmin()">
+         ${GARMIN_SVG} Connecter Garmin
+       </button>`;
+
+  container.innerHTML = stravaSlot + garminSlot +
+    `<button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>`;
+}
+
 async function loadIntegrations(session) {
   if (!session) return;
+  _currentSession = session;
   try {
     const r = await fetch('/api/integrations', {
       headers: { 'Authorization': 'Bearer ' + session.access_token }
     });
-    const integrations = await r.json();
-    // Hide buttons for already-connected providers
-    if (integrations.strava) {
-      const btn = document.querySelector('.btn-strava');
-      if (btn) { btn.textContent = '✓ Strava connecté'; btn.disabled = true; btn.style.opacity = '.5'; }
-    }
-    if (integrations.garmin) {
-      const btn = document.querySelector('.btn-garmin');
-      if (btn) { btn.textContent = '✓ Garmin connecté'; btn.disabled = true; btn.style.opacity = '.5'; }
-    }
+    renderDeviceActions(await r.json());
   } catch { /* ignore */ }
+}
+
+async function disconnectProvider(provider) {
+  if (!_currentSession) return;
+  showToast(`🔄 Déconnexion ${provider}…`, 'info');
+  try {
+    const r = await fetch(`/api/${provider}/disconnect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: _currentSession.access_token }),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showToast(`✅ ${provider.charAt(0).toUpperCase() + provider.slice(1)} déconnecté.`, 'success');
+      loadIntegrations(_currentSession);
+    } else {
+      showToast(`❌ Erreur : ${d.error}`, 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau : ' + e.message, 'error');
+  }
 }
 
 // ── Auth modal ────────────────────────────────────────
