@@ -469,24 +469,39 @@
 
 <!-- ══ CONNECT BANNER ══════════════════════════════════ -->
 <div id="connect-banner">
-  <div class="banner-text">
-    <strong>Aidez-nous à améliorer vos prédictions.</strong>
-    Connectez votre compte Strava ou Garmin pour personnaliser vos pacings en fonction de votre historique de course.
+
+  <!-- Étape 1 : non connecté -->
+  <div id="banner-step1" style="display:flex;align-items:center;gap:16px;flex:1;flex-wrap:wrap;">
+    <div class="banner-text">
+      <strong>Aidez-nous à améliorer vos prédictions.</strong>
+      Créez un compte pour contribuer à l'entraînement du modèle et bénéficier de pacings personnalisés.
+    </div>
+    <div class="banner-actions">
+      <button class="btn-connect btn-account" onclick="openAuth('signup')">✦ Créer un compte</button>
+      <button class="btn-connect btn-account" style="opacity:.7" onclick="openAuth('login')">Se connecter</button>
+      <button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>
+    </div>
   </div>
-  <div class="banner-actions">
-    <button class="btn-connect btn-strava" onclick="openAuth('login')" title="Connexion via Strava">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-      Strava
-    </button>
-    <button class="btn-connect btn-garmin" onclick="openAuth('login')" title="Connexion via Garmin">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>
-      Garmin
-    </button>
-    <button class="btn-connect btn-account" onclick="openAuth('signup')">
-      Créer un compte
-    </button>
-    <button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>
+
+  <!-- Étape 2 : connecté → appareillez vos données -->
+  <div id="banner-step2" style="display:none;align-items:center;gap:16px;flex:1;flex-wrap:wrap;">
+    <div class="banner-text">
+      <strong>Appariez vos données.</strong>
+      Connectez Strava ou Garmin pour synchroniser votre historique et affiner vos prédictions.
+    </div>
+    <div class="banner-actions">
+      <button class="btn-connect btn-strava" onclick="connectStrava()" title="Connecter Strava">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+        Connecter Strava
+      </button>
+      <button class="btn-connect btn-garmin" onclick="connectGarmin()" title="Connecter Garmin">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>
+        Connecter Garmin
+      </button>
+      <button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>
+    </div>
   </div>
+
 </div>
 
 <!-- ══ MAIN LAYOUT ══════════════════════════════════════ -->
@@ -580,6 +595,23 @@ function dismissBanner() {
   sessionStorage.setItem('banner-dismissed', '1');
 }
 
+function showBannerStep(step) {
+  if (sessionStorage.getItem('banner-dismissed')) return;
+  document.getElementById('connect-banner').style.display = 'flex';
+  document.getElementById('banner-step1').style.display = step === 1 ? 'flex' : 'none';
+  document.getElementById('banner-step2').style.display = step === 2 ? 'flex' : 'none';
+}
+
+function connectStrava() {
+  // TODO: OAuth Strava
+  alert('Intégration Strava à venir !');
+}
+
+function connectGarmin() {
+  // TODO: OAuth Garmin
+  alert('Intégration Garmin à venir !');
+}
+
 // ── Auth modal ────────────────────────────────────────
 function openAuth(tab = 'login') {
   switchTab(tab);
@@ -642,16 +674,14 @@ function setLoggedIn(user) {
       <div class="user-avatar">${initials}</div>
       <span>${user.email}</span>
     </div>`;
-  // Hide banner if logged in
-  document.getElementById('connect-banner').style.display = 'none';
+  showBannerStep(2);
   closeAuth();
 }
 
 function setLoggedOut() {
   document.getElementById('header-auth').innerHTML =
     `<button class="btn-signin" onclick="openAuth('login')">Se connecter</button>`;
-  if (!sessionStorage.getItem('banner-dismissed'))
-    document.getElementById('connect-banner').style.display = 'flex';
+  showBannerStep(1);
 }
 
 // ── File listing ──────────────────────────────────────
@@ -730,14 +760,10 @@ function openFile(filename, el) {
 
 // ── Boot ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // Restore banner dismiss
-  if (sessionStorage.getItem('banner-dismissed'))
-    document.getElementById('connect-banner').style.display = 'none';
-
   // Always load files — no auth required
   loadFileList();
 
-  if (!initSupabase()) return;
+  if (!initSupabase()) { showBannerStep(1); return; }
 
   const { data: { session } } = await _sb.auth.getSession();
   if (session) setLoggedIn(session.user);
