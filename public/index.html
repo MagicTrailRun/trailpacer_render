@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏔️ Trail Pacer — UTOI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f1923;
+      color: #e0e6f0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── AUTH SCREEN ─────────────────────────────────── */
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #0f1923 0%, #1a2d3d 100%);
+    }
+
+    .auth-card {
+      background: #1e2d3d;
+      border: 1px solid #2d4a5e;
+      border-radius: 16px;
+      padding: 48px 44px;
+      width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .auth-logo .icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .auth-logo h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #e0e6f0;
+    }
+
+    .auth-logo p {
+      font-size: 13px;
+      color: #7a9bb5;
+      margin-top: 4px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid #2d4a5e;
+      margin-bottom: 28px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: #7a9bb5;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      color: #4fc3f7;
+      border-bottom-color: #4fc3f7;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: #7a9bb5;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      background: #0f1923;
+      border: 1px solid #2d4a5e;
+      border-radius: 8px;
+      color: #e0e6f0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #4fc3f7;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #4fc3f7;
+      color: #0f1923;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover { background: #81d4fa; }
+    .btn-primary:disabled { background: #2d4a5e; color: #7a9bb5; cursor: not-allowed; }
+
+    .auth-error {
+      background: #3d1a1a;
+      border: 1px solid #7f2929;
+      color: #ff7b7b;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+    }
+
+    .auth-success {
+      background: #1a3d2a;
+      border: 1px solid #2a7f4f;
+      color: #7bffb0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+    }
+
+    /* ── APP LAYOUT ──────────────────────────────────── */
+    #app-screen {
+      display: none;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1e2d3d;
+      border-bottom: 1px solid #2d4a5e;
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #e0e6f0;
+      flex: 1;
+    }
+
+    .topbar-title span { color: #4fc3f7; }
+
+    .topbar-user {
+      font-size: 13px;
+      color: #7a9bb5;
+    }
+
+    .btn-logout {
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid #2d4a5e;
+      border-radius: 6px;
+      color: #7a9bb5;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      border-color: #ff7b7b;
+      color: #ff7b7b;
+    }
+
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar {
+      width: 280px;
+      background: #1a2535;
+      border-right: 1px solid #2d4a5e;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid #2d4a5e;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #4fc3f7;
+    }
+
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .file-item {
+      padding: 12px 18px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .file-item:hover {
+      background: #243447;
+      border-left-color: #4fc3f7;
+    }
+
+    .file-item.active {
+      background: #1e3a50;
+      border-left-color: #4fc3f7;
+    }
+
+    .file-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c8daea;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .file-item-meta {
+      font-size: 11px;
+      color: #4a6a80;
+      margin-top: 3px;
+    }
+
+    .file-item-badge {
+      display: inline-block;
+      background: #1e3a50;
+      color: #4fc3f7;
+      border: 1px solid #2d5a70;
+      border-radius: 4px;
+      font-size: 10px;
+      padding: 1px 6px;
+      margin-top: 4px;
+    }
+
+    .sidebar-empty {
+      padding: 24px 18px;
+      color: #4a6a80;
+      font-size: 13px;
+    }
+
+    /* ── VIEWER ──────────────────────────────────────── */
+    .viewer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .viewer-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #2d4a5e;
+      gap: 12px;
+    }
+
+    .viewer-placeholder .big-icon { font-size: 64px; }
+    .viewer-placeholder p { font-size: 16px; }
+
+    .viewer-frame {
+      flex: 1;
+      border: none;
+      background: #fff;
+      display: none;
+    }
+
+    .viewer-loading {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #2d4a5e;
+      border-top-color: #4fc3f7;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CONFIG BANNER ───────────────────────────────── */
+    #config-banner {
+      background: #3d2a0f;
+      border: 1px solid #7f5a00;
+      color: #ffc945;
+      padding: 10px 18px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #config-banner a { color: #ffd970; }
+  </style>
+</head>
+<body>
+
+<!-- ══ CONFIG BANNER ══ -->
+<div id="config-banner">
+  ⚠️ Configurez votre projet Supabase dans le fichier <code>public/supabase-config.js</code> avant d'utiliser l'application.
+</div>
+
+<!-- ══ AUTH SCREEN ══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="icon">🏔️</span>
+      <h1>Trail Pacer</h1>
+      <p>Visualiseur de pacing UTOI / SPEEDGOAT</p>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Connexion</div>
+      <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Inscription</div>
+    </div>
+
+    <div id="form-login">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="vous@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') doLogin()">
+      </div>
+      <button class="btn-primary" onclick="doLogin()" id="btn-login">Se connecter</button>
+    </div>
+
+    <div id="form-signup" style="display:none">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="vous@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="signup-password" placeholder="Minimum 6 caractères" autocomplete="new-password">
+      </div>
+      <button class="btn-primary" onclick="doSignup()" id="btn-signup">Créer un compte</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-success" id="auth-success"></div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-title">🏔️ Trail <span>Pacer</span></div>
+    <div class="topbar-user" id="user-email"></div>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </div>
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-header">📂 Fichiers de pacing</div>
+      <div class="file-list" id="file-list">
+        <div class="sidebar-empty">Chargement…</div>
+      </div>
+    </div>
+    <div class="viewer">
+      <div class="viewer-placeholder" id="viewer-placeholder">
+        <span class="big-icon">🗂️</span>
+        <p>Sélectionnez un fichier dans le menu</p>
+      </div>
+      <div class="viewer-loading" id="viewer-loading">
+        <div class="spinner"></div>
+      </div>
+      <iframe class="viewer-frame" id="viewer-frame" title="Pacing viewer"></iframe>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-config.js"></script>
+<script>
+  // ── Supabase init ──────────────────────────────────────
+  let _supabase = null;
+
+  function initSupabase() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY ||
+        window.SUPABASE_URL === 'VOTRE_SUPABASE_URL') {
+      document.getElementById('config-banner').style.display = 'flex';
+      return false;
+    }
+    _supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    return true;
+  }
+
+  // ── Tab switching ──────────────────────────────────────
+  function switchTab(tab) {
+    document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    hideMessages();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('auth-success');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  function hideMessages() {
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  // ── Auth actions ───────────────────────────────────────
+  async function doLogin() {
+    if (!_supabase) return;
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showError('Remplissez tous les champs.');
+
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    btn.textContent = 'Connexion…';
+    hideMessages();
+
+    const { error } = await _supabase.auth.signInWithPassword({ email, password });
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+
+    if (error) showError(error.message);
+  }
+
+  async function doSignup() {
+    if (!_supabase) return;
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    if (!email || !password) return showError('Remplissez tous les champs.');
+    if (password.length < 6) return showError('Mot de passe trop court (min. 6 caractères).');
+
+    const btn = document.getElementById('btn-signup');
+    btn.disabled = true;
+    btn.textContent = 'Création…';
+    hideMessages();
+
+    const { error } = await _supabase.auth.signUp({ email, password });
+    btn.disabled = false;
+    btn.textContent = 'Créer un compte';
+
+    if (error) showError(error.message);
+    else showSuccess('Compte créé ! Vérifiez votre email pour confirmer.');
+  }
+
+  async function doLogout() {
+    if (!_supabase) return;
+    await _supabase.auth.signOut();
+  }
+
+  // ── Session management ─────────────────────────────────
+  function showApp(user) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    document.getElementById('user-email').textContent = user.email;
+    loadFileList();
+  }
+
+  function showAuth() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+
+  // ── File listing ───────────────────────────────────────
+  async function loadFileList() {
+    const container = document.getElementById('file-list');
+    try {
+      const res = await fetch('/api/files');
+      const files = await res.json();
+
+      if (files.length === 0) {
+        container.innerHTML = '<div class="sidebar-empty">Aucun fichier de pacing trouvé.<br>Placez des fichiers <code>predict_*.html</code> dans le dossier de l\'application.</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      files.forEach(f => {
+        const el = document.createElement('div');
+        el.className = 'file-item';
+        el.dataset.filename = f.name;
+
+        // Parse nice label from filename
+        // e.g. predict_SPEEDGOAT_2026_DDF_20260505_141714.html
+        const parts = f.name.replace('predict_', '').replace('.html', '').split('_');
+        const race = parts[0] || '';
+        const year = parts[1] || '';
+        const label = `${race} ${year}`.trim();
+        const date = new Date(f.modified).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        el.innerHTML = `
+          <div class="file-item-name">🏃 ${label || f.name}</div>
+          <div class="file-item-meta">Généré le ${date}</div>
+          <div class="file-item-badge">${(f.size / 1024).toFixed(0)} Ko</div>
+        `;
+        el.addEventListener('click', () => openFile(f.name, el));
+        container.appendChild(el);
+      });
+    } catch (e) {
+      container.innerHTML = '<div class="sidebar-empty">Erreur de chargement des fichiers.</div>';
+    }
+  }
+
+  function openFile(filename, el) {
+    // Update active state
+    document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+
+    // Show loading
+    document.getElementById('viewer-placeholder').style.display = 'none';
+    document.getElementById('viewer-loading').style.display = 'flex';
+    document.getElementById('viewer-frame').style.display = 'none';
+
+    const frame = document.getElementById('viewer-frame');
+    frame.onload = () => {
+      document.getElementById('viewer-loading').style.display = 'none';
+      frame.style.display = 'block';
+    };
+    frame.src = `/pacing/${encodeURIComponent(filename)}`;
+  }
+
+  // ── Bootstrap ──────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!initSupabase()) {
+      // Still show app for demo without auth if config missing
+      showAuth();
+      return;
+    }
+
+    // Check existing session
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) showApp(session.user);
+    else showAuth();
+
+    // Listen for auth changes
+    _supabase.auth.onAuthStateChange((event, session) => {
+      if (session) showApp(session.user);
+      else showAuth();
+    });
+  });
+</script>
+</body>
+</html>
