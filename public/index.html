@@ -448,6 +448,34 @@
       aside { width: 220px; }
       #connect-banner { padding: 10px 14px; }
     }
+
+    /* ── TOAST ──────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .25s, transform .25s;
+      max-width: 320px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.info    { background: var(--surface2); border: 1px solid var(--border2); color: var(--text); }
+    .toast.success { background: #0f3320; border: 1px solid #1a7a4a; color: #5dffa0; }
+    .toast.error   { background: #3d1212; border: 1px solid #7f2020; color: #ff8080; }
   </style>
 </head>
 <body>
@@ -578,6 +606,8 @@
   </div>
 </div>
 
+<div id="toast-container"></div>
+
 <script src="supabase-config.js"></script>
 <script>
 // ── Supabase ──────────────────────────────────────────
@@ -603,13 +633,81 @@ function showBannerStep(step) {
 }
 
 function connectStrava() {
-  // TODO: OAuth Strava
-  alert('Intégration Strava à venir !');
+  window.location.href = '/api/strava/authorize';
 }
 
 function connectGarmin() {
-  // TODO: OAuth Garmin
-  alert('Intégration Garmin à venir !');
+  window.location.href = '/api/garmin/authorize';
+}
+
+// ── OAuth callback handler ────────────────────────────────────
+async function handleOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code  = params.get('code');
+  const state = params.get('state');
+  if (!code || !state) return;
+
+  // Clean URL immediately
+  window.history.replaceState({}, '', '/');
+
+  if (!_sb) return;
+  const { data: { session } } = await _sb.auth.getSession();
+  if (!session) {
+    showToast('⚠️ Connectez-vous avant d\'appairer un appareil.', 'error');
+    return;
+  }
+
+  showToast('🔄 Connexion en cours…', 'info');
+
+  try {
+    if (state === 'strava') {
+      const r = await fetch('/api/strava/callback', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ code, token: session.access_token }),
+      });
+      const d = await r.json();
+      if (d.ok) showToast(`✅ Strava connecté${d.name ? ' — ' + d.name : ''} !`, 'success');
+      else       showToast('❌ Erreur Strava : ' + d.error, 'error');
+
+    } else if (state.startsWith('garmin_')) {
+      const state_key = state.slice('garmin_'.length);
+      const r = await fetch('/api/garmin/callback', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ code, state_key, token: session.access_token }),
+      });
+      const d = await r.json();
+      if (d.ok) showToast('✅ Garmin connecté !', 'success');
+      else       showToast('❌ Erreur Garmin : ' + d.error, 'error');
+    }
+
+    // Refresh banner to hide connected buttons
+    loadIntegrations(session);
+
+  } catch (e) {
+    showToast('❌ Erreur réseau : ' + e.message, 'error');
+  }
+}
+
+// ── Integration status → hide connected buttons ───────────────
+async function loadIntegrations(session) {
+  if (!session) return;
+  try {
+    const r = await fetch('/api/integrations', {
+      headers: { 'Authorization': 'Bearer ' + session.access_token }
+    });
+    const integrations = await r.json();
+    // Hide buttons for already-connected providers
+    if (integrations.strava) {
+      const btn = document.querySelector('.btn-strava');
+      if (btn) { btn.textContent = '✓ Strava connecté'; btn.disabled = true; btn.style.opacity = '.5'; }
+    }
+    if (integrations.garmin) {
+      const btn = document.querySelector('.btn-garmin');
+      if (btn) { btn.textContent = '✓ Garmin connecté'; btn.disabled = true; btn.style.opacity = '.5'; }
+    }
+  } catch { /* ignore */ }
 }
 
 // ── Auth modal ────────────────────────────────────────
@@ -758,20 +856,43 @@ function openFile(filename, el) {
   frame.src = `/pacing/${encodeURIComponent(filename)}`;
 }
 
+// ── Toast ─────────────────────────────────────────────
+function showToast(msg, type = 'info', duration = 4000) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
 // ── Boot ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // Always load files — no auth required
   loadFileList();
 
   if (!initSupabase()) { showBannerStep(1); return; }
 
-  const { data: { session } } = await _sb.auth.getSession();
-  if (session) setLoggedIn(session.user);
-  else setLoggedOut();
+  // Handle OAuth redirect before anything else
+  await handleOAuthCallback();
 
-  _sb.auth.onAuthStateChange((_, session) => {
-    if (session) setLoggedIn(session.user);
-    else setLoggedOut();
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    setLoggedIn(session.user);
+    loadIntegrations(session);
+  } else {
+    setLoggedOut();
+  }
+
+  _sb.auth.onAuthStateChange(async (_, session) => {
+    if (session) {
+      setLoggedIn(session.user);
+      loadIntegrations(session);
+    } else {
+      setLoggedOut();
+    }
   });
 });
 </script>
