@@ -1095,6 +1095,7 @@
 <script>
 // ── Supabase ──────────────────────────────────────────
 let _sb = null;
+let _recoveryToken = null;
 
 function initSupabase() {
   if (!window.SUPABASE_URL || window.SUPABASE_URL === 'VOTRE_SUPABASE_URL') return false;
@@ -1295,20 +1296,49 @@ async function doSignup() {
 }
 
 async function doResetPassword() {
-  if (!_sb) return showError('Supabase non configuré.');
   const pwd     = document.getElementById('reset-password').value;
   const confirm = document.getElementById('reset-password-confirm').value;
   if (!pwd || !confirm) return showError('Remplissez les deux champs.');
   if (pwd.length < 6)   return showError('Mot de passe trop court (min. 6 caractères).');
   if (pwd !== confirm)  return showError('Les mots de passe ne correspondent pas.');
+
   const btn = document.getElementById('btn-reset');
   btn.disabled = true; btn.textContent = 'Enregistrement…';
-  const { error } = await _sb.auth.updateUser({ password: pwd });
+
+  let hasError = null;
+
+  if (_recoveryToken) {
+    // Appel direct à l'API Supabase avec le token de récupération
+    try {
+      const res = await fetch(`${window.SUPABASE_URL}/auth/v1/user`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${_recoveryToken}`,
+          'apikey': window.SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: pwd })
+      });
+      const data = await res.json();
+      if (!res.ok) hasError = data.message || data.msg || 'Erreur inconnue';
+    } catch (e) {
+      hasError = 'Erreur réseau : ' + e.message;
+    }
+  } else if (_sb) {
+    const { error } = await _sb.auth.updateUser({ password: pwd });
+    if (error) hasError = error.message;
+  } else {
+    hasError = 'Session expirée, recommencez depuis le lien email.';
+  }
+
   btn.disabled = false; btn.textContent = 'Enregistrer le mot de passe';
-  if (error) showError(error.message);
-  else {
-    showSuccess('Mot de passe mis à jour ! Vous êtes connecté.');
-    setTimeout(closeAuth, 2000);
+
+  if (hasError) {
+    showError(hasError);
+  } else {
+    _recoveryToken = null;
+    showSuccess('✅ Mot de passe mis à jour ! Vous pouvez vous connecter.');
+    setTimeout(closeAuth, 2500);
   }
 }
 
@@ -1525,22 +1555,28 @@ function showToast(msg, type = 'info', duration = 4000) {
   }, duration);
 }
 
+// ── Password recovery depuis l'URL ────────────────────
+function handlePasswordRecovery() {
+  const params = new URLSearchParams(window.location.search);
+  const token  = params.get('access_token');
+  const type   = params.get('type');
+  if (type !== 'recovery' || !token) return false;
+
+  _recoveryToken = token;
+  window.history.replaceState({}, '', '/');
+  switchTab('reset');
+  document.getElementById('auth-overlay').classList.add('open');
+  return true;
+}
+
 // ── Boot ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   loadFileList();
 
   if (!initSupabase()) { showBannerStep(1); return; }
 
-  // Handle OAuth redirect before anything else
-  await handleOAuthCallback();
-
-  const { data: { session } } = await _sb.auth.getSession();
-  if (session) {
-    setLoggedIn(session.user);
-    loadIntegrations(session);
-  } else {
-    setLoggedOut();
-  }
+  // Intercepter le token de récupération AVANT tout le reste
+  if (handlePasswordRecovery()) return;
 
   _sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'PASSWORD_RECOVERY') {
@@ -1555,6 +1591,16 @@ window.addEventListener('DOMContentLoaded', async () => {
       setLoggedOut();
     }
   });
+
+  await handleOAuthCallback();
+
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    setLoggedIn(session.user);
+    loadIntegrations(session);
+  } else {
+    setLoggedOut();
+  }
 });
 </script>
 </body>
