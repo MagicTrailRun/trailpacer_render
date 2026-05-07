@@ -887,7 +887,7 @@
   <div class="auth-modal">
     <button class="modal-close" onclick="closeAuth()">×</button>
     <div class="modal-logo">
-      <img class="icon" src="/icon.jpg" alt="Trail Pacer">
+      <img class="icon" src="/icon_web.png" alt="Trail Pacer">
       <h2>Trail Pacer</h2>
       <p>Synchronisez vos données pour nous aider a faire des modèles plus personnalisés</p>
     </div>
@@ -909,6 +909,13 @@
                onkeydown="if(event.key==='Enter') doLogin()">
       </div>
       <button class="btn-modal-submit" id="btn-login" onclick="doLogin()">Se connecter</button>
+      <div style="text-align:center;margin-top:12px;">
+        <a href="#" onclick="doForgotPassword();return false;"
+           style="font-size:12px;color:var(--text-muted);text-decoration:none;transition:color .15s;"
+           onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--text-muted)'">
+          Mot de passe oublié ?
+        </a>
+      </div>
     </div>
 
     <div id="form-signup" style="display:none">
@@ -1262,6 +1269,17 @@ async function doSignup() {
   btn.disabled = false; btn.textContent = 'Créer un compte';
   if (error) showError(error.message);
   else showSuccess('Compte créé ! Vérifiez votre email pour confirmer.');
+}
+
+async function doForgotPassword() {
+  if (!_sb) return showError('Supabase non configuré.');
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) return showError('Entrez votre email ci-dessus pour réinitialiser le mot de passe.');
+  const { error } = await _sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  });
+  if (error) showError(error.message);
+  else showSuccess('Email de réinitialisation envoyé ! Vérifiez votre boîte mail.');
 }
 
 async function doLogout() {
