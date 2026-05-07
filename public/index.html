@@ -780,16 +780,12 @@
 <!-- ══ HEADER ══════════════════════════════════════════ -->
 <header>
   <div class="logo">
-    <img class="logo-icon" src="/icon.jpg" alt="Trail Pacer">
+    <img class="logo-icon" src="/icon_web.png" alt="Trail Pacer">
     <div>
       Trail Pacer
-      <div class="logo-sub">UTOI · SPEEDGOAT 2026</div>
     </div>
   </div>
   <div class="spacer"></div>
-  <div id="header-auth">
-    <button class="btn-signin" onclick="openAuth('login')">Se connecter</button>
-  </div>
 </header>
 
 <!-- ══ CONNECT BANNER ══════════════════════════════════ -->
@@ -798,11 +794,11 @@
   <!-- Étape 1 : non connecté -->
   <div id="banner-step1" style="display:flex;align-items:center;gap:16px;flex:1;flex-wrap:wrap;">
     <div class="banner-text">
-      <strong>Aidez-nous à améliorer vos prédictions.</strong>
-      Créez un compte pour contribuer à l'entraînement du modèle et bénéficier de pacings personnalisés.
+      <strong>Aidez-nous à améliorer nos prédictions.</strong>
+        Si vous voulez soutenir notre travail, nous aurions besoins de vos données d'entrainements afin de créer des modeles encore plus fiables... N'hésitez pas à créer un compte et appareiller votre compte Garmin ou Strava
     </div>
     <div class="banner-actions">
-      <button class="btn-connect btn-account" onclick="openAuth('signup')">✦ Créer un compte</button>
+      <button class="btn-connect btn-account" onclick="openAuth('signup')">Créer un compte</button>
       <button class="btn-connect btn-account" style="opacity:.7" onclick="openAuth('login')">Se connecter</button>
       <button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>
     </div>
@@ -857,7 +853,7 @@
     <div class="modal-logo">
       <img class="icon" src="/icon.jpg" alt="Trail Pacer">
       <h2>Trail Pacer</h2>
-      <p>Synchronisez vos données pour des pacings personnalisés</p>
+      <p>Synchronisez vos données pour nous aider a faire des modèles plus personnalisés</p>
     </div>
 
     <div class="modal-tabs" id="modal-tabs">
