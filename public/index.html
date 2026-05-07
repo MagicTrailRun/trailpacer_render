@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trail Pacer</title>
+  <title>Trail Pacer — UTOI / SPEEDGOAT</title>
+  <link rel="icon" type="image/jpeg" href="/icon_web.png">
+  <link rel="shortcut icon" href="/icon_web.png">
+  <link rel="apple-touch-icon" href="/icon_web.png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -60,15 +63,11 @@
     }
 
     .logo-icon {
-      width: 30px;
-      height: 30px;
-      background: linear-gradient(135deg, #2563eb, #0ea5e9);
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
       flex-shrink: 0;
+      overflow: hidden;
     }
 
     .logo-sub {
@@ -425,7 +424,7 @@
       text-align: center;
       margin-bottom: 26px;
     }
-    .modal-logo .icon { font-size: 38px; display: block; margin-bottom: 8px; }
+    .modal-logo .icon { width: 56px; height: 56px; display: block; margin: 0 auto 8px; }
     .modal-logo h2 { font-size: 19px; font-weight: 700; }
     .modal-logo p { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
@@ -523,77 +522,257 @@
     .toast.success { background: #0f3320; border: 1px solid #1a7a4a; color: #5dffa0; }
     .toast.error   { background: #3d1212; border: 1px solid #7f2020; color: #ff8080; }
 
-    /* ── Footer CTA ── */
-    .tp-footer {
+    /* ── ACCOUNT PANEL ──────────────────────────── */
+    .account-hero {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 0 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .account-avatar {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #2563eb, #0ea5e9);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 3px rgba(58,168,248,.25);
+    }
+    .account-info { flex: 1; min-width: 0; }
+    .account-email {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .account-label {
+      font-size: 11px; color: var(--text-muted); margin-top: 2px;
+    }
+
+    .integrations-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .integration-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      transition: border-color .15s;
+    }
+    .integration-row:hover { border-color: var(--border2); }
+    .integration-logo {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .integration-logo.strava { background: #3a1500; }
+    .integration-logo.garmin { background: #001d38; }
+    .integration-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .integration-status {
+      font-size: 11px; color: var(--text-muted); margin-top: 1px;
+    }
+    .dot-on  { color: #2ecc71; }
+    .dot-off { color: var(--border2); }
+
+    .btn-int-connect {
+      padding: 5px 12px; border-radius: 6px; font-size: 11px;
+      font-weight: 600; cursor: pointer; border: 1px solid transparent;
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn-int-connect.on  { background: none; border-color: var(--border2); color: var(--text-muted); }
+    .btn-int-connect.on:hover  { border-color: #ff6b6b; color: #ff6b6b; }
+    .btn-int-connect.off { background: var(--blue); color: #fff; border-color: transparent; }
+    .btn-int-connect.off:hover { opacity: .85; }
+
+    .danger-zone {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-logout {
+      width: 100%; padding: 10px;
+      background: none;
+      border: 1px solid #7f2020;
+      color: #ff8080;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .btn-logout:hover { background: #3d1212; border-color: #ff8080; }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    footer {
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 24px 32px;
-      margin-top: 0;
-    }
-    .tp-footer-inner {
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 10px 20px;
       display: flex;
-      align-items: flex-start;
-      gap: 32px;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: var(--text-muted);
     }
-    .tp-footer-text {
-      flex: 1;
-      min-width: 280px;
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color .15s;
     }
-    .tp-footer-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
+    footer a:hover { color: var(--blue); }
+    footer .sep { opacity: .3; }
+
+    /* ── PRIVACY MODAL ──────────────────────────── */
+    #privacy-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    .tp-footer-text p:last-child {
-      font-size: 13px;
-      color: #8aadc4;
-      line-height: 1.6;
-    }
-    .tp-footer-actions {
+    #privacy-overlay.open { display: flex; }
+
+    .privacy-modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      width: 580px;
+      max-width: 100%;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      align-items: flex-start;
+      box-shadow: 0 32px 100px rgba(0,0,0,.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .privacy-header {
+      padding: 28px 32px 22px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      background: linear-gradient(135deg, #0e2840 0%, var(--surface) 100%);
     }
-    .tp-footer-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 16px;
-      border-radius: 8px;
-      border: none;
+    .privacy-header-top {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 6px;
+    }
+    .privacy-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #1a3d5c, #2563eb);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .privacy-header h2 { font-size: 18px; font-weight: 800; }
+    .privacy-header p  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .privacy-close {
+      position: absolute; top: 16px; right: 18px;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 22px;
+      cursor: pointer; border-radius: 6px; padding: 2px 8px;
+      transition: color .15s;
+    }
+    .privacy-close:hover { color: var(--text); }
+
+    .privacy-body {
+      padding: 24px 32px;
+      overflow-y: auto;
+      flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+
+    .privacy-section { margin-bottom: 24px; }
+    .privacy-section:last-child { margin-bottom: 0; }
+
+    .ps-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--blue);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .ps-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border2), transparent);
+    }
+
+    .ps-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
       font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity .15s;
+      line-height: 1.7;
+      color: var(--text);
     }
-    .tp-footer-btn:hover { opacity: .85; }
-    .btn-strava  { background: #fc4c02; color: #fff; }
-    .btn-garmin  { background: #007cc3; color: #fff; }
-    .tp-footer-socials {
-      display: flex;
-      gap: 10px;
-      margin-top: 2px;
+    .ps-card strong { color: var(--text); font-weight: 700; }
+    .ps-card a { color: var(--blue); text-decoration: none; }
+    .ps-card a:hover { text-decoration: underline; }
+
+    .ps-card ul { margin: 8px 0 0 16px; }
+    .ps-card li { margin-bottom: 4px; }
+    .ps-card li::marker { color: var(--blue); }
+
+    .rights-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
-    .tp-social-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
+    .right-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
       font-size: 12px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: opacity .15s;
+      color: var(--text-muted);
+      display: flex; gap: 9px; align-items: flex-start;
     }
-    .tp-social-link:hover { opacity: .8; }
-    .tp-social-ig { background: #c13584; color: #fff; }
-    .tp-social-fb { background: #1877f2; color: #fff; }
+    .right-card .ri { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    .cnil-card {
+      background: linear-gradient(135deg, #0e2840, #132030);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      font-size: 13px;
+    }
+    .cnil-logo {
+      font-size: 26px; flex-shrink: 0;
+    }
+    .cnil-text { flex: 1; line-height: 1.5; }
+    .cnil-text a { color: var(--blue); text-decoration: none; font-weight: 600; }
+    .cnil-text a:hover { text-decoration: underline; }
+
+    .privacy-footer {
+      padding: 16px 32px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface);
+    }
+    .privacy-contact {
+      font-size: 12px; color: var(--text-muted);
+    }
+    .privacy-contact a { color: var(--blue); text-decoration: none; }
+    .privacy-contact a:hover { text-decoration: underline; }
+    .btn-close-privacy {
+      padding: 8px 20px;
+      background: var(--blue);
+      color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-close-privacy:hover { opacity: .85; }
   </style>
 </head>
 <body>
@@ -601,10 +780,10 @@
 <!-- ══ HEADER ══════════════════════════════════════════ -->
 <header>
   <div class="logo">
-    <div class="logo-icon">🏔️</div>
+    <img class="logo-icon" src="/icon.jpg" alt="Trail Pacer">
     <div>
       Trail Pacer
-      <div class="logo-sub">UTOI</div>
+      <div class="logo-sub">UTOI · SPEEDGOAT 2026</div>
     </div>
   </div>
   <div class="spacer"></div>
@@ -671,58 +850,20 @@
 
 </div>
 
-<!-- ══ FOOTER CTA ═══════════════════════════════════════ -->
-<footer class="tp-footer">
-  <div class="tp-footer-inner">
-
-    <div class="tp-footer-text">
-      <p class="tp-footer-title">Trail Pacer, ce n'est qu'un début 🚀</p>
-      <p>
-        Cette initiative a pour ambition de créer des modèles de pacing toujours plus fiables,
-        entraînés sur des données réelles de trail runners.
-        <strong>Vous pouvez y contribuer</strong> en connectant votre compte Garmin ou Strava —
-        vos données d'entraînement nous aident directement à améliorer les prédictions pour toute la communauté.
-        Merci pour votre soutien ! 🙏
-      </p>
-    </div>
-
-    <div class="tp-footer-actions">
-      <button class="tp-footer-btn btn-strava" onclick="connectStrava()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-        Connecter Strava
-      </button>
-      <button class="tp-footer-btn btn-garmin" onclick="connectGarmin()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6z"/></svg>
-        Connecter Garmin
-      </button>
-      <div class="tp-footer-socials">
-        <a href="https://www.instagram.com/trail_pacer/" target="_blank" rel="noopener" class="tp-social-link tp-social-ig" title="Instagram">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-          @trail_pacer
-        </a>
-        <a href="https://www.facebook.com/TrailPacer.IA" target="_blank" rel="noopener" class="tp-social-link tp-social-fb" title="Facebook">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          TrailPacer.IA
-        </a>
-      </div>
-    </div>
-
-  </div>
-</footer>
-
 <!-- ══ AUTH MODAL ══════════════════════════════════════ -->
 <div id="auth-overlay" onclick="overlayClick(event)">
   <div class="auth-modal">
     <button class="modal-close" onclick="closeAuth()">×</button>
     <div class="modal-logo">
-      <span class="icon">🏔️</span>
+      <img class="icon" src="/icon.jpg" alt="Trail Pacer">
       <h2>Trail Pacer</h2>
       <p>Synchronisez vos données pour des pacings personnalisés</p>
     </div>
 
-    <div class="modal-tabs">
-      <div class="modal-tab active" id="tab-login" onclick="switchTab('login')">Connexion</div>
-      <div class="modal-tab" id="tab-signup" onclick="switchTab('signup')">Inscription</div>
+    <div class="modal-tabs" id="modal-tabs">
+      <div class="modal-tab active" id="tab-login"  onclick="switchTab('login')">Connexion</div>
+      <div class="modal-tab"        id="tab-signup" onclick="switchTab('signup')">Inscription</div>
+      <div class="modal-tab"        id="tab-account" style="display:none" onclick="switchTab('account')">Mon compte</div>
     </div>
 
     <div id="form-login">
@@ -750,8 +891,142 @@
       <button class="btn-modal-submit" id="btn-signup" onclick="doSignup()">Créer un compte</button>
     </div>
 
+    <div id="form-account" style="display:none">
+      <!-- Hero user -->
+      <div class="account-hero">
+        <div class="account-avatar" id="account-avatar">?</div>
+        <div class="account-info">
+          <div class="account-email" id="account-email">—</div>
+          <div class="account-label">Compte Trail Pacer</div>
+        </div>
+      </div>
+
+      <!-- Intégrations -->
+      <div class="integrations-title">Appareils connectés</div>
+      <div id="account-integrations">
+        <!-- rempli par renderAccountIntegrations() -->
+        <div class="integration-row">
+          <div class="integration-logo strava">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#fc4c02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="integration-name">Strava</div>
+            <div class="integration-status"><span class="dot-off">●</span> Chargement…</div>
+          </div>
+        </div>
+        <div class="integration-row">
+          <div class="integration-logo garmin">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#007cc3"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="integration-name">Garmin</div>
+            <div class="integration-status"><span class="dot-off">●</span> Chargement…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="danger-zone">
+        <button class="btn-logout" onclick="doLogout()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Se déconnecter de Trail Pacer
+        </button>
+      </div>
+    </div>
+
     <div class="msg-error" id="auth-error"></div>
     <div class="msg-ok"    id="auth-success"></div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer>
+  <span>© 2026 Trail Pacer</span>
+  <span class="sep">·</span>
+  <a href="mailto:trailpacer.ia@gmail.com">trailpacer.ia@gmail.com</a>
+  <span class="sep">·</span>
+  <a href="#" onclick="openPrivacy(); return false;">Politique de confidentialité</a>
+</footer>
+
+<!-- ══ PRIVACY MODAL ═════════════════════════════════════ -->
+<div id="privacy-overlay" onclick="privacyOverlayClick(event)">
+  <div class="privacy-modal">
+    <button class="privacy-close" onclick="closePrivacy()">×</button>
+
+    <div class="privacy-header">
+      <div class="privacy-header-top">
+        <div class="privacy-icon">🔒</div>
+        <div>
+          <h2>Politique de confidentialité</h2>
+          <p>Dernière mise à jour · Mai 2026</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-body">
+
+      <div class="privacy-section">
+        <div class="ps-label">Responsable du traitement</div>
+        <div class="ps-card">
+          <strong>Trail Pacer</strong> — Projet de recherche et d'innovation en trail running<br>
+          📩 <a href="mailto:trailpacer.ia@gmail.com">trailpacer.ia@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="privacy-section">
+        <div class="ps-label">Finalités du traitement</div>
+        <div class="ps-card">
+          Les informations recueillies <strong>(adresses email)</strong> sont utilisées pour :
+          <ul>
+            <li>Vous envoyer les actualités et nouveautés de Trail Pacer</li>
+            <li>Vous proposer en avant-première de tester de nouvelles fonctionnalités</li>
+            <li>Avec votre accord, vous solliciter dans le cadre de projets de recherche scientifique (questionnaires, enquêtes, études)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="privacy-section">
+        <div class="ps-label">Destinataires &amp; durée</div>
+        <div class="ps-card">
+          <strong>Destinataires :</strong> données destinées exclusivement à l'équipe Trail Pacer — jamais communiquées à des tiers.<br><br>
+          <strong>Conservation :</strong> jusqu'à votre demande de suppression, ou au maximum <strong>5 ans</strong> après la dernière interaction.
+        </div>
+      </div>
+
+      <div class="privacy-section">
+        <div class="ps-label">Vos droits (RGPD)</div>
+        <div class="rights-grid">
+          <div class="right-card"><span class="ri">👁</span> Droit d'accès à vos données</div>
+          <div class="right-card"><span class="ri">✏️</span> Droit de rectification</div>
+          <div class="right-card"><span class="ri">🗑</span> Droit de suppression</div>
+          <div class="right-card"><span class="ri">⏸</span> Droit de limitation du traitement</div>
+          <div class="right-card"><span class="ri">↩️</span> Retrait du consentement à tout moment</div>
+          <div class="right-card"><span class="ri">🚫</span> Droit d'opposition au traitement</div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-muted);text-align:center;">
+          Pour exercer vos droits → <a href="mailto:trailpacer.ia@gmail.com" style="color:var(--blue)">trailpacer.ia@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="privacy-section">
+        <div class="ps-label">Réclamation CNIL</div>
+        <div class="cnil-card">
+          <div class="cnil-logo">🇫🇷</div>
+          <div class="cnil-text">
+            Si vous estimez que vos droits ne sont pas respectés après nous avoir contactés, vous pouvez adresser une réclamation à la CNIL :<br>
+            <a href="https://www.cnil.fr" target="_blank" rel="noopener">www.cnil.fr</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="privacy-footer">
+      <div class="privacy-contact">
+        Questions ? <a href="mailto:trailpacer.ia@gmail.com">trailpacer.ia@gmail.com</a>
+      </div>
+      <button class="btn-close-privacy" onclick="closePrivacy()">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -875,10 +1150,12 @@ async function loadIntegrations(session) {
   if (!session) return;
   _currentSession = session;
   try {
-    const r = await fetch('/api/integrations', {
+    const r    = await fetch('/api/integrations', {
       headers: { 'Authorization': 'Bearer ' + session.access_token }
     });
-    renderDeviceActions(await r.json());
+    const data = await r.json();
+    renderDeviceActions(data);
+    renderAccountIntegrations(data);
   } catch { /* ignore */ }
 }
 
@@ -916,10 +1193,12 @@ function overlayClick(e) {
 }
 
 function switchTab(tab) {
-  document.getElementById('form-login').style.display  = tab === 'login'  ? 'block' : 'none';
-  document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
-  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('form-login').style.display    = tab === 'login'   ? 'block' : 'none';
+  document.getElementById('form-signup').style.display   = tab === 'signup'  ? 'block' : 'none';
+  document.getElementById('form-account').style.display  = tab === 'account' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',   tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active',  tab === 'signup');
+  document.getElementById('tab-account').classList.toggle('active', tab === 'account');
   clearMessages();
 }
 
@@ -961,10 +1240,20 @@ async function doLogout() {
 function setLoggedIn(user) {
   const initials = (user.email || 'U').slice(0, 2).toUpperCase();
   document.getElementById('header-auth').innerHTML = `
-    <div class="user-pill" onclick="doLogout()" title="Déconnexion">
+    <div class="user-pill" onclick="openAuth('account')" title="Mon compte">
       <div class="user-avatar">${initials}</div>
       <span>${user.email}</span>
     </div>`;
+
+  // Reveal account tab, hide login/signup tabs
+  document.getElementById('tab-account').style.display = '';
+  document.getElementById('tab-login').style.display   = 'none';
+  document.getElementById('tab-signup').style.display  = 'none';
+
+  // Fill account panel
+  document.getElementById('account-avatar').textContent = initials;
+  document.getElementById('account-email').textContent  = user.email;
+
   showBannerStep(2);
   closeAuth();
 }
@@ -972,7 +1261,58 @@ function setLoggedIn(user) {
 function setLoggedOut() {
   document.getElementById('header-auth').innerHTML =
     `<button class="btn-signin" onclick="openAuth('login')">Se connecter</button>`;
+
+  // Hide account tab, restore login/signup tabs
+  document.getElementById('tab-account').style.display = 'none';
+  document.getElementById('tab-login').style.display   = '';
+  document.getElementById('tab-signup').style.display  = '';
+
   showBannerStep(1);
+}
+
+// ── Account integrations panel ────────────────────────
+function renderAccountIntegrations(integrations) {
+  const c = document.getElementById('account-integrations');
+  if (!c) return;
+
+  const STRAVA_ICO = `<svg width="15" height="15" viewBox="0 0 24 24" fill="#fc4c02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>`;
+  const GARMIN_ICO = `<svg width="15" height="15" viewBox="0 0 24 24" fill="#007cc3"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>`;
+
+  const row = (provider, label, logo, cls, connected) => `
+    <div class="integration-row">
+      <div class="integration-logo ${cls}">${logo}</div>
+      <div style="flex:1">
+        <div class="integration-name">${label}</div>
+        <div class="integration-status">
+          <span class="${connected ? 'dot-on' : 'dot-off'}">●</span>
+          ${connected ? 'Connecté' : 'Non connecté'}
+        </div>
+      </div>
+      <button class="btn-int-connect ${connected ? 'on' : 'off'}"
+        onclick="${connected ? `disconnectProvider('${provider}')` : `connectStrava_or_garmin('${provider}')`}">
+        ${connected ? 'Déconnecter' : 'Connecter'}
+      </button>
+    </div>`;
+
+  c.innerHTML =
+    row('strava', 'Strava', STRAVA_ICO, 'strava', integrations.strava) +
+    row('garmin', 'Garmin', GARMIN_ICO, 'garmin', integrations.garmin);
+}
+
+function connectStrava_or_garmin(provider) {
+  closeAuth();
+  provider === 'strava' ? connectStrava() : connectGarmin();
+}
+
+// ── Privacy modal ─────────────────────────────────────
+function openPrivacy() {
+  document.getElementById('privacy-overlay').classList.add('open');
+}
+function closePrivacy() {
+  document.getElementById('privacy-overlay').classList.remove('open');
+}
+function privacyOverlayClick(e) {
+  if (e.target === document.getElementById('privacy-overlay')) closePrivacy();
 }
 
 // ── File listing ──────────────────────────────────────
