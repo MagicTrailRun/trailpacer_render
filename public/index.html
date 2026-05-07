@@ -975,6 +975,24 @@
       </div>
     </div>
 
+    <div id="form-reset" style="display:none">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:32px;margin-bottom:8px;">🔑</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">Nouveau mot de passe</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px)">Choisissez un mot de passe sécurisé</div>
+      </div>
+      <div class="field">
+        <label>Nouveau mot de passe</label>
+        <input type="password" id="reset-password" placeholder="Minimum 6 caractères">
+      </div>
+      <div class="field">
+        <label>Confirmer le mot de passe</label>
+        <input type="password" id="reset-password-confirm" placeholder="Répétez le mot de passe"
+               onkeydown="if(event.key==='Enter') doResetPassword()">
+      </div>
+      <button class="btn-modal-submit" id="btn-reset" onclick="doResetPassword()">Enregistrer le mot de passe</button>
+    </div>
+
     <div class="msg-error" id="auth-error"></div>
     <div class="msg-ok"    id="auth-success"></div>
   </div>
@@ -1237,9 +1255,12 @@ function switchTab(tab) {
   document.getElementById('form-login').style.display    = tab === 'login'   ? 'block' : 'none';
   document.getElementById('form-signup').style.display   = tab === 'signup'  ? 'block' : 'none';
   document.getElementById('form-account').style.display  = tab === 'account' ? 'block' : 'none';
+  document.getElementById('form-reset').style.display    = tab === 'reset'   ? 'block' : 'none';
   document.getElementById('tab-login').classList.toggle('active',   tab === 'login');
   document.getElementById('tab-signup').classList.toggle('active',  tab === 'signup');
   document.getElementById('tab-account').classList.toggle('active', tab === 'account');
+  // Masquer toute la barre d'onglets en mode reset
+  document.getElementById('modal-tabs').style.display = tab === 'reset' ? 'none' : 'flex';
   clearMessages();
 }
 
@@ -1271,6 +1292,24 @@ async function doSignup() {
   btn.disabled = false; btn.textContent = 'Créer un compte';
   if (error) showError(error.message);
   else showSuccess('Compte créé ! Vérifiez votre email pour confirmer.');
+}
+
+async function doResetPassword() {
+  if (!_sb) return showError('Supabase non configuré.');
+  const pwd     = document.getElementById('reset-password').value;
+  const confirm = document.getElementById('reset-password-confirm').value;
+  if (!pwd || !confirm) return showError('Remplissez les deux champs.');
+  if (pwd.length < 6)   return showError('Mot de passe trop court (min. 6 caractères).');
+  if (pwd !== confirm)  return showError('Les mots de passe ne correspondent pas.');
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const { error } = await _sb.auth.updateUser({ password: pwd });
+  btn.disabled = false; btn.textContent = 'Enregistrer le mot de passe';
+  if (error) showError(error.message);
+  else {
+    showSuccess('Mot de passe mis à jour ! Vous êtes connecté.');
+    setTimeout(closeAuth, 2000);
+  }
 }
 
 async function doForgotPassword() {
@@ -1507,7 +1546,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     setLoggedOut();
   }
 
-  _sb.auth.onAuthStateChange(async (_, session) => {
+  _sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      switchTab('reset');
+      document.getElementById('auth-overlay').classList.add('open');
+      return;
+    }
     if (session) {
       setLoggedIn(session.user);
       loadIntegrations(session);
