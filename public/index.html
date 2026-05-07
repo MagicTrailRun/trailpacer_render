@@ -1447,10 +1447,10 @@ async function loadFileList() {
     container.innerHTML = '';
     folderOrder.forEach(folder => {
       const folderFiles = byFolder[folder];
+      const raceYear = f => f.name.replace(/^predict_/, '').split('_')[1] || '';
+
       if (folderFiles.length === 1) {
-        // Single file — show as one item with folder name as label
         const f = folderFiles[0];
-        const date = new Date(f.modified).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
         const el = document.createElement('div');
         el.className = 'file-item';
         el.dataset.path = f.path;
@@ -1460,20 +1460,17 @@ async function loadFileList() {
             ${folder}
           </div>
           <div class="fi-meta">
-            <span>📅 ${date}</span>
-            <span class="fi-size">${(f.size / 1024).toFixed(0)} Ko</span>
+            <span>🗓 ${raceYear(f)}</span>
           </div>`;
         el.addEventListener('click', () => openFile(f.path, el));
         container.appendChild(el);
       } else {
-        // Multiple files — folder header + sub-items
         const header = document.createElement('div');
         header.className = 'folder-header';
         header.innerHTML = `${raceBadge(folderFiles[0].name)} ${folder}`;
         container.appendChild(header);
 
         folderFiles.forEach(f => {
-          const date = new Date(f.modified).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
           const el = document.createElement('div');
           el.className = 'file-item file-item-sub';
           el.dataset.path = f.path;
@@ -1482,8 +1479,7 @@ async function loadFileList() {
               ${f.name.replace(/^predict_/, '').replace(/_\d{8}_\d{6}\.html$/, '').replace(/_/g, ' ')}
             </div>
             <div class="fi-meta">
-              <span>📅 ${date}</span>
-              <span class="fi-size">${(f.size / 1024).toFixed(0)} Ko</span>
+              <span>🗓 ${raceYear(f)}</span>
             </div>`;
           el.addEventListener('click', () => openFile(f.path, el));
           container.appendChild(el);
