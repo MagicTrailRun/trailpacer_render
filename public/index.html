@@ -287,6 +287,21 @@
     .file-item:hover { background: var(--surface2); border-left-color: var(--border2); }
     .file-item.active { background: #0e2840; border-left-color: var(--blue); }
 
+    .folder-header {
+      padding: 8px 16px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #6b8aa8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .file-item-sub { padding-left: 24px; }
+    .file-item-sub .fi-race { font-size: 12px; font-weight: 500; }
+
     .fi-race {
       font-size: 13px;
       font-weight: 700;
@@ -879,24 +894,59 @@ async function loadFileList() {
       return;
     }
 
-    container.innerHTML = '';
+    // Group by folder, preserving order (already sorted by modified desc)
+    const byFolder = {};
+    const folderOrder = [];
     files.forEach(f => {
-      const { race, year, tag } = niceLabel(f.name);
-      const date = new Date(f.modified).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-      const el = document.createElement('div');
-      el.className = 'file-item';
-      el.dataset.filename = f.name;
-      el.innerHTML = `
-        <div class="fi-race">
-          ${raceBadge(f.name)}
-          ${race} ${year}${tag ? ' — ' + tag : ''}
-        </div>
-        <div class="fi-meta">
-          <span>📅 ${date}</span>
-          <span class="fi-size">${(f.size / 1024).toFixed(0)} Ko</span>
-        </div>`;
-      el.addEventListener('click', () => openFile(f.name, el));
-      container.appendChild(el);
+      if (!byFolder[f.folder]) { byFolder[f.folder] = []; folderOrder.push(f.folder); }
+      byFolder[f.folder].push(f);
+    });
+
+    container.innerHTML = '';
+    folderOrder.forEach(folder => {
+      const folderFiles = byFolder[folder];
+      if (folderFiles.length === 1) {
+        // Single file — show as one item with folder name as label
+        const f = folderFiles[0];
+        const date = new Date(f.modified).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        const el = document.createElement('div');
+        el.className = 'file-item';
+        el.dataset.path = f.path;
+        el.innerHTML = `
+          <div class="fi-race">
+            ${raceBadge(f.name)}
+            ${folder}
+          </div>
+          <div class="fi-meta">
+            <span>📅 ${date}</span>
+            <span class="fi-size">${(f.size / 1024).toFixed(0)} Ko</span>
+          </div>`;
+        el.addEventListener('click', () => openFile(f.path, el));
+        container.appendChild(el);
+      } else {
+        // Multiple files — folder header + sub-items
+        const header = document.createElement('div');
+        header.className = 'folder-header';
+        header.innerHTML = `${raceBadge(folderFiles[0].name)} ${folder}`;
+        container.appendChild(header);
+
+        folderFiles.forEach(f => {
+          const date = new Date(f.modified).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+          const el = document.createElement('div');
+          el.className = 'file-item file-item-sub';
+          el.dataset.path = f.path;
+          el.innerHTML = `
+            <div class="fi-race">
+              ${f.name.replace(/^predict_/, '').replace(/_\d{8}_\d{6}\.html$/, '').replace(/_/g, ' ')}
+            </div>
+            <div class="fi-meta">
+              <span>📅 ${date}</span>
+              <span class="fi-size">${(f.size / 1024).toFixed(0)} Ko</span>
+            </div>`;
+          el.addEventListener('click', () => openFile(f.path, el));
+          container.appendChild(el);
+        });
+      }
     });
 
     // Auto-open first file
@@ -907,7 +957,7 @@ async function loadFileList() {
   }
 }
 
-function openFile(filename, el) {
+function openFile(path, el) {
   document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
   el.classList.add('active');
 
@@ -920,7 +970,8 @@ function openFile(filename, el) {
     document.getElementById('viewer-loading').style.display = 'none';
     frame.style.display = 'block';
   };
-  frame.src = `/pacing/${encodeURIComponent(filename)}`;
+  // Encode each segment separately to preserve the slash
+  frame.src = '/pacing/' + path.split('/').map(encodeURIComponent).join('/');
 }
 
 // ── Toast ─────────────────────────────────────────────
