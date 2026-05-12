@@ -26,8 +26,10 @@ STRAVA_CLIENT_SECRET = os.environ.get("STRAVA_CLIENT_SECRET", "")
 GARMIN_CLIENT_ID     = os.environ.get("GARMIN_CLIENT_ID", "")
 GARMIN_CLIENT_SECRET = os.environ.get("GARMIN_CLIENT_SECRET", "")
 
-BACKEND_STRAVA_IS_LINKED_URL  = os.environ.get("BACKEND_STRAVA_IS_LINKED_URL", "")
-BACKEND_GARMIN_IS_LINKED_URL  = os.environ.get("BACKEND_GARMIN_IS_LINKED_URL", "")
+BACKEND_STRAVA_IS_LINKED_URL      = os.environ.get("BACKEND_STRAVA_IS_LINKED_URL", "")
+BACKEND_GARMIN_IS_LINKED_URL      = os.environ.get("BACKEND_GARMIN_IS_LINKED_URL", "")
+BACKEND_STRAVA_DEREGISTRATION_URL = os.environ.get("BACKEND_STRAVA_DEREGISTRATION_URL", "")
+BACKEND_GARMIN_DEREGISTRATION_URL = os.environ.get("BACKEND_GARMIN_DEREGISTRATION_URL", "")
 
 # Temporary PKCE store (in-memory, fine for single-instance Render)
 _pkce_store: dict[str, str] = {}
@@ -93,6 +95,31 @@ def _create_user_profile(user_id: str, email: str):
         json={"id": user_id, "email": email, "created_at": now, "updated_at": now},
         timeout=5
     )
+
+def _send_deregistration_strava(user_id: str):
+    if not BACKEND_STRAVA_DEREGISTRATION_URL:
+        return
+    try:
+        requests.post(
+            BACKEND_STRAVA_DEREGISTRATION_URL,
+            json={"owner_id": user_id, "object_id": user_id,
+                  "object_type": "athlete", "aspect_type": "delete"},
+            timeout=10
+        )
+    except Exception:
+        pass
+
+def _send_deregistration_garmin(user_id: str):
+    if not BACKEND_GARMIN_DEREGISTRATION_URL:
+        return
+    try:
+        requests.post(
+            BACKEND_GARMIN_DEREGISTRATION_URL,
+            json={"deregistrations": [{"userId": user_id}]},
+            timeout=10
+        )
+    except Exception:
+        pass
 
 def _send_connection_webhook(user_id: str, access_token: str, device: str):
     url = BACKEND_STRAVA_IS_LINKED_URL if device == "strava" else BACKEND_GARMIN_IS_LINKED_URL
@@ -306,11 +333,13 @@ def strava_disconnect():
         f"{SUPABASE_URL}/rest/v1/integrations",
         headers={**_supabase_admin_headers(), "Accept": "application/json"},
         params={"user_id": f"eq.{user['id']}", "provider": "eq.strava",
-                "select": "access_token"},
+                "select": "access_token,external_user_id"},
         timeout=5
     )
     if r.status_code == 200 and r.json():
-        access_token = r.json()[0].get("access_token")
+        row = r.json()[0]
+        access_token = row.get("access_token")
+        external_user_id = row.get("external_user_id")
         if access_token:
             try:
                 requests.post(
@@ -320,6 +349,8 @@ def strava_disconnect():
                 )
             except Exception:
                 pass
+        if external_user_id:
+            _send_deregistration_strava(external_user_id)
 
     # Supprime en base
     requests.delete(
@@ -350,6 +381,7 @@ def garmin_disconnect():
     if r.status_code == 200 and r.json():
         row = r.json()[0]
         access_token = row.get("access_token")
+        external_user_id = row.get("external_user_id")
         if access_token:
             try:
                 requests.delete(
@@ -359,6 +391,8 @@ def garmin_disconnect():
                 )
             except Exception:
                 pass
+        if external_user_id:
+            _send_deregistration_garmin(external_user_id)
 
     # Supprime en base
     requests.delete(
