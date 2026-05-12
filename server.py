@@ -85,6 +85,15 @@ def _save_integration(user_id: str, platform: str, tokens: dict):
         timeout=5
     )
 
+def _create_user_profile(user_id: str, email: str):
+    now = datetime.now(timezone.utc).isoformat()
+    requests.post(
+        f"{SUPABASE_URL}/rest/v1/users",
+        headers={**_supabase_admin_headers(), "Prefer": "resolution=merge-duplicates"},
+        json={"id": user_id, "email": email, "created_at": now, "updated_at": now},
+        timeout=5
+    )
+
 def _send_connection_webhook(user_id: str, access_token: str, device: str):
     url = BACKEND_STRAVA_IS_LINKED_URL if device == "strava" else BACKEND_GARMIN_IS_LINKED_URL
     if not url:
@@ -358,6 +367,19 @@ def garmin_disconnect():
         params={"user_id": f"eq.{user['id']}", "provider": "eq.garmin"},
         timeout=5
     )
+    return jsonify({"ok": True})
+
+
+# ── User registration ─────────────────────────────────────────
+
+@app.route("/api/user/register", methods=["POST"])
+def register_user():
+    data  = request.get_json(force=True)
+    token = data.get("token")
+    user  = _get_supabase_user(token)
+    if not user:
+        return jsonify({"error": "Non authentifié"}), 401
+    _create_user_profile(user["id"], user.get("email", ""))
     return jsonify({"ok": True})
 
 

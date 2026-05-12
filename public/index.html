@@ -1206,6 +1206,17 @@ function renderDeviceActions(integrations) {
     `<button class="btn-dismiss" onclick="dismissBanner()" title="Masquer">×</button>`;
 }
 
+async function registerUser(session) {
+  if (!session) return;
+  try {
+    await fetch('/api/user/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: session.access_token }),
+    });
+  } catch { /* silently ignore */ }
+}
+
 async function loadIntegrations(session) {
   if (!session) return;
   _currentSession = session;
@@ -1585,6 +1596,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     if (session) {
+      registerUser(session);
       setLoggedIn(session.user);
       loadIntegrations(session);
     } else {
@@ -1596,6 +1608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   const { data: { session } } = await _sb.auth.getSession();
   if (session) {
+    registerUser(session);
     setLoggedIn(session.user);
     loadIntegrations(session);
   } else {
