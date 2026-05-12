@@ -352,13 +352,6 @@ def strava_disconnect():
         if external_user_id:
             _send_deregistration_strava(external_user_id)
 
-    # Supprime en base
-    requests.delete(
-        f"{SUPABASE_URL}/rest/v1/integrations",
-        headers=_supabase_admin_headers(),
-        params={"user_id": f"eq.{user['id']}", "provider": "eq.strava"},
-        timeout=5
-    )
     return jsonify({"ok": True})
 
 
@@ -394,13 +387,6 @@ def garmin_disconnect():
         if external_user_id:
             _send_deregistration_garmin(external_user_id)
 
-    # Supprime en base
-    requests.delete(
-        f"{SUPABASE_URL}/rest/v1/integrations",
-        headers=_supabase_admin_headers(),
-        params={"user_id": f"eq.{user['id']}", "provider": "eq.garmin"},
-        timeout=5
-    )
     return jsonify({"ok": True})
 
 
